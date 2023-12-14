@@ -17,14 +17,33 @@ If you are developing a production application, we recommend updating the config
 export default {
   // other rules...
   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
+    ecmaVersion: "latest",
+    sourceType: "module",
+    project: ["./tsconfig.json", "./tsconfig.node.json"],
     tsconfigRootDir: __dirname,
   },
-}
+};
 ```
 
 - Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
 - Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
 - Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+
+# Setup and run
+
+- Clone the repo
+- Run 'npm install'
+- Run 'npm run dev'
+- Enjoy!
+
+# UI Components
+
+The projects uses [shadcn/ui]() component collection
+
+To add a new component from the collection use the command.
+
+`npx shadcn-ui@latest add <component_name>`
+
+The components can be found [here](https://ui.shadcn.com/docs/components/), and each component has the command at the start.
+
+After executing the command, a new file will be added in `src/component/ui` and you can customize the component as you need it.
