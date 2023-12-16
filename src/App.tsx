@@ -1,35 +1,99 @@
-import { twMerge } from "tailwind-merge";
-import { Button } from "./components/ui/button";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Layout from "./components/layout";
+import { AuthenticationGuard } from "./components/auth/authentication-guard";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth } from "./context/authContext";
+import { useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
+import UserLayout from "./components/userLayout";
+import { PageLoader } from "./components/auth/page-loader";
+import UserQuizes from "./pages/userQuizes";
+import { Profile } from "./pages/profile";
+import AdminDashboard from "./pages/adminDashboard";
+import AdminCreateQuestion from "./pages/adminCreateQuestion";
+import AdminQuestions from "./pages/adminQuestions";
+import AdminQuizes from "./pages/adminQuizes";
+import AdminCreateQuiz from "./pages/adminCreateQuiz";
+import ErrorPage from "./pages/errorPage";
+import AdminEditQuestion from "./pages/adminEditQuestion";
+import UserSolveQuiz from "./pages/userSolveQuiz";
+import AdminEditQuiz from "./pages/adminEditQuiz";
 
-function App() {
+const App: React.FC = () => {
+  const { isAuthenticated, getAccessTokenSilently, isLoading } = useAuth0();
+  const { storeData } = useAuth();
+  const { isAdmin } = useAuth();
+  const fetchData = async () => {
+    try {
+      if (isAuthenticated) {
+        let token = await getAccessTokenSilently();
+        if (token !== null) {
+          const decodedToken: { permissions: string[] } = jwtDecode(token);
+          const userIsAdmin = decodedToken.permissions.includes("Admin");
+          storeData!(token, isAuthenticated, userIsAdmin);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching access token:", error);
+    }
+  };
+  useEffect(() => {
+    fetchData();
+  }, [getAccessTokenSilently, isAuthenticated, storeData]);
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
   return (
-    <div
-      className={` h-screen flex flex-col items-center justify-center gap-y-14 px-10 ${twMerge(
-        "lg:px-18",
-        "lg:px-20"
-      )}`}
-    >
-      <h1 className="text-6xl lg:text-8xl text-qyellow font-bold text-center">
-        Quiz Project
-      </h1>
-      <Button
-        variant="type1"
-        onClick={() => {
-          alert("Welcome to our Quiz app!");
-        }}
-      >
-        Welcome
-      </Button>
-      <Button
-        variant="type2"
-        onClick={() => {
-          alert("Bienvenue donc notre quiz app!");
-        }}
-      >
-        Bienvenue
-      </Button>
-    </div>
+    <Routes>
+      {isAuthenticated && isAdmin ? (
+        <>
+          <Route path="/">
+            <Route index element={<Navigate to="/admin" />} />
+            <Route
+              path="/admin"
+              element={<AuthenticationGuard component={Layout} />}
+            >
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route
+                path="/admin/questions/create"
+                element={<AdminCreateQuestion />}
+              />
+              <Route
+                path="/admin/questions/edit/:id"
+                element={<AdminEditQuestion />}
+              />
+
+              <Route path="/admin/questions" element={<AdminQuestions />} />
+              <Route
+                path="/admin/quizes/create"
+                element={<AdminCreateQuiz />}
+              />
+              <Route
+                path="/admin/quizes/edit/:id"
+                element={<AdminEditQuiz />}
+              />
+              <Route path="/admin/quizes" element={<AdminQuizes />} />
+              <Route path="/admin/profile" element={<Profile />} />
+            </Route>
+          </Route>
+        </>
+      ) : (
+        <>
+          <Route
+            path="/"
+            element={<AuthenticationGuard component={UserLayout} />}
+          >
+            <Route index element={<UserQuizes />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/quizes/solve/:id" element={<UserSolveQuiz />} />
+          </Route>
+        </>
+      )}
+      <Route path="*" element={<ErrorPage />} />
+    </Routes>
   );
-}
+};
 
 export default App;
